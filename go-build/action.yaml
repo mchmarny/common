@@ -19,13 +19,13 @@ inputs:
     default: 'main.go'
 
 outputs:
-  uri:
+  image-uri:
     description: 'Fully qualified image URI after build (includes digest)'
     value: ${{ jobs.build.outputs.uri }}
-  digest:
+  image-digest:
     description: 'Image digest after build'
     value: ${{ jobs.build.outputs.digest }}
-  name:
+  image-name:
     description: 'Image name (no digest or tag)'
     value: ${{ jobs.build.outputs.name }}
 
