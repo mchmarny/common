@@ -1,8 +1,8 @@
 name: 'Test and Lint Go Code'
 description: |
-  This action sets up a KinD cluster based on the supplied
-  configuration knobs.
-
+  This action tests and lints Go code in a repository.
+  It includes unit tests, Go linting, YAML linting, and vulnerability scanning using Trivy.
+  The action is designed to be reusable across different workflows.
 
 inputs:
   go-version:
