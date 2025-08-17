@@ -21,13 +21,13 @@ inputs:
 outputs:
   uri:
     description: 'Fully qualified image URI after build (includes digest)'
-    value: ${{ jobs.build.outputs.digest }}
+    value: ${{ jobs.build.outputs.uri }}
   digest:
     description: 'Image digest after build'
     value: ${{ jobs.build.outputs.digest }}
   name:
     description: 'Image name (no digest or tag)'
-    value: ${{ jobs.build.outputs.digest }}
+    value: ${{ jobs.build.outputs.name }}
 
 runs:
   using: "composite"
