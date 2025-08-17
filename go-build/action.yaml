@@ -85,4 +85,4 @@ runs:
         --tags ${{ inputs.release-version }}
       echo "uri=$(cat .uri)" >> "$GITHUB_OUTPUT"
       echo "digest=$(cat .uri | sed 's/.*@//')" >> "$GITHUB_OUTPUT"
-      echo "name=$(cat .uri | sed 's/[.@].*//')" >> "$GITHUB_OUTPUT"
+      echo "name=$(cat .uri | sed 's/[:@].*//')" >> "$GITHUB_OUTPUT"
