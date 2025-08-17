@@ -79,3 +79,11 @@ runs:
           -a run_id=${{ github.run_id }} \
           -a run_attempt=${{ github.run_attempt }} \
           -a tag=${{ inputs.image-tag }}
+
+  - name: Verify keyless signing
+    if: ${{ inputs.keyless-signing == 'true' }}
+    shell: bash
+    run: |-
+      slsa-verifier verify-image ${{ inputs.image-uri }} \
+        --source-uri "github.com/$GITHUB_REPOSITORY" \
+        --source-tag "$GITHUB_REF_NAME"
