@@ -1,0 +1,71 @@
+name: build
+
+on:
+  workflow_call:
+    inputs:
+      image-uri:
+        description: 'Image name (e.g. my-image)'
+        required: true
+        type: string
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.25.0'
+      release-version:
+        description: 'Release version to use'
+        required: false
+        type: string
+        default: 'latest'
+      main-path:
+        description: 'Path to the main package (default: main.go)'
+        required: false
+        type: string
+        default: 'main.go'
+    outputs:
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+    - name: Setup Go
+      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5.5.0
+      with:
+        go-version: '${{ inputs.go-version }}'
+        cache: true
+        cache-dependency-path: |
+          go.sum
+          **/go.sum
+    - run: go version
+    - name: Tidy Modules
+      run: |
+        go mod tidy
+        go mod vendor
+    - name: Install ko
+      uses: ko-build/setup-ko@d006021bd0c28d1ce33a07e7943d48b079944c8d  # v0.9
+    - name: Authenticate ko
+      run: |
+        ko login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Image
+      id: image
+      env:
+        KO_DOCKER_REPO: ghcr.io/${{ github.repository_owner }}/${{ inputs.image-uri }}
+      run: |
+        set -euo pipefail
+        ko build ${{ inputs.main-path }} \
+          --image-refs .digest \
+          --bare \
+          --tags ${{ inputs.release-version }} \
+          --tags ${{ github.sha }}
+        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
