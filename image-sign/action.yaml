@@ -1,65 +1,82 @@
 name: sign
+description: |
+  Sign and verify container images using Cosign
 
-on:
-  workflow_call:
-    inputs:
-      image-uri:
-        description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
-        required: true
-        type: string
-      image-tag:
-        description: 'Image tag to verify (registry/image:tag)'
-        required: false
-        type: string
-        default: 'latest'
-      cosign-version:
-        description: 'The version of cosign to use'
-        required: false
-        type: string
-        default: 'v2.5.0'
-      private-key-path:
-        description: 'Path to the private key for signing'
-        required: false
-        type: string
-        default: 'cosign.key'
-      public-key-path:
-        description: 'Path to the public key for verification'
-        required: false
-        type: string
-        default: 'cosign.pub'
 
-permissions:
-  contents: read
+inputs:
+  image-uri:
+    description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
+    required: true
+  image-tag:
+    description: 'Image tag to verify (registry/image:tag)'
+    required: false
+    default: 'latest'
+  cosign-version:
+    description: 'The version of cosign to use'
+    required: false
+    default: 'v2.5.0'
+  keyless-signing:
+    description: 'Use keyless signing with Cosign'
+    required: false
+    default: 'false'
+  private-key-path:
+    description: 'Path to the private key for signing'
+    required: false
+    default: 'cosign.key'
+  public-key-path:
+    description: 'Path to the public key for verification'
+    required: false
+    default: 'cosign.pub'
 
-jobs:
+runs:
+  using: "composite"
 
-  sign:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      packages: write
-    steps:
-    - name: Install Cosign
-      uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149  # v3.3.0
-      with:
-        cosign-release: ${{ inputs.cosign-version }}
-    - name: Check Cosign
-      run: |
-        cosign version
-    - name: Auth Cosign
-      run: |
-        cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-    - name: Sign Image
-      env:
-        COSIGN_YES: true
-      run: |
-        cosign sign ${{ inputs.image-uri }} \
-            --key ${{ inputs.private-key-path }} \
-            -a sha=${{ github.sha }} \
-            -a run_id=${{ github.run_id }} \
-            -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ inputs.image-tag }}
+  steps:
 
-    - name: Verify Signature
-      run: |
-        cosign verify --key ${{ inputs.public-key-path }} ${{ inputs.image-uri }}
+  - name: Validate Inputs
+    shell: bash
+    run: |
+      if [[ "${{ inputs.keyless-signing }}" != "true" && -z "${{ inputs.private-key-path }}" ]]; then
+        echo "Error: private-key-path is required when keyless-signing is false"
+        exit 1
+      fi
+
+  - name: Install Cosign
+    uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149  # v3.3.0
+    with:
+      cosign-release: ${{ inputs.cosign-version }}
+
+  - name: Check Cosign
+    shell: bash
+    run: |
+      cosign version
+
+  - name: Auth Cosign
+    shell: bash
+    run: |
+      cosign login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+
+  - name: Sign Image using private key
+    if: ${{ inputs.keyless-signing != 'true' }}
+    shell: bash
+    env:
+      COSIGN_YES: true
+    run: |
+      cosign sign ${{ inputs.image-uri }} \
+          --key ${{ inputs.private-key-path }} \
+          -a sha=${{ github.sha }} \
+          -a run_id=${{ github.run_id }} \
+          -a run_attempt=${{ github.run_attempt }} \
+          -a tag=${{ inputs.image-tag }}
+
+  - name: Sign Image using keyless signing
+    if: ${{ inputs.keyless-signing == 'true' }}
+    shell: bash
+    env:
+      COSIGN_YES: true
+    run: |
+      cosign sign ${{ inputs.image-uri }} \
+          -a sha=${{ github.sha }} \
+          -a run_id=${{ github.run_id }} \
+          -a run_attempt=${{ github.run_attempt }} \
+          -a tag=${{ inputs.image-tag }}
