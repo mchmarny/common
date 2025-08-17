@@ -17,6 +17,13 @@ inputs:
     description: 'Path to the main package (default: main.go)'
     required: false
     default: 'main.go'
+  registry-username:
+    description: 'Registry username'
+    required: false
+    default: ${{ github.actor }}
+  registry-password:
+    description: 'Registry password'
+    required: true
 
 outputs:
   image-uri:
@@ -61,7 +68,7 @@ runs:
   - name: Authenticate ko
     shell: bash
     run: |
-      ko login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+      ko login ghcr.io -u ${{ inputs.registry-username }} -p ${{ inputs.registry-password }}
 
   - name: Build Image
     shell: bash
@@ -73,8 +80,7 @@ runs:
       ko build ${{ inputs.main-path }} \
         --image-refs .uri \
         --bare \
-        --tags ${{ inputs.release-version }} \
-        --tags ${{ github.sha }}
+        --tags ${{ inputs.release-version }}
       echo "uri=$(cat .uri)" >> "$GITHUB_OUTPUT"
       echo "digest=$(cat .uri | sed 's/.*@//')" >> "$GITHUB_OUTPUT"
       echo "name=$(cat .uri | sed 's/[.@].*//')" >> "$GITHUB_OUTPUT"
