@@ -1,4 +1,4 @@
-name: 'Test and Lint Go Code'
+name: go-test
 description: |
   This action tests and lints Go code in a repository.
   It includes unit tests, Go linting, YAML linting, and vulnerability scanning using Trivy.

@@ -2,7 +2,6 @@ name: sign
 description: |
   Sign and verify container images using Cosign
 
-
 inputs:
   image-uri:
     description: 'Fully-qualified image digest to verify (registry/image@sha256:digest)'
