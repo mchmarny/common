@@ -1,36 +1,32 @@
 name: scan
+description: |
+  Scan a container image for vulnerabilities using Trivy.
+  This action scans the specified image URI and reports vulnerabilities in SARIF format.
+  It can be used in workflows to ensure images meet security standards before deployment.
 
-on:
-  workflow_call:
-    inputs:
-      image-uri:
-        description: 'Fully-qualified image URI to verify (registry/image@sha256:digest)'
-        required: true
-        type: string
-      scan-severity:
-        description: 'Error on vulnerability scan severity'
-        required: false
-        type: string
-        default: 'CRITICAL,HIGH,MEDIUM'
 
-permissions:
-  contents: read
+inputs:
+  image-uri:
+    description: 'Fully-qualified image URI to verify (registry/image@sha256:digest)'
+    required: true
+  scan-severity:
+    description: 'Error on vulnerability scan severity'
+    required: false
+    default: 'CRITICAL,HIGH,MEDIUM'
 
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-    steps:
-    - name: Scan Image
-      uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
-      with:
-        scan-type: image
-        severity: ${{ inputs.scan-severity }}
-        image-ref: ${{ inputs.image-uri }}
-        github-pat: ${{ secrets.GITHUB_TOKEN }}
-        format: sarif
-        output: trivy-results.sarif
-        hide-progress: true
-        timeout: "10m"
-        exit-code: "1"
+runs:
+  using: "composite"
+
+  steps:
+  - name: Scan Image
+    uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
+    with:
+      scan-type: image
+      severity: ${{ inputs.scan-severity }}
+      image-ref: ${{ inputs.image-uri }}
+      github-pat: ${{ secrets.GITHUB_TOKEN }}
+      format: sarif
+      output: trivy-results.sarif
+      hide-progress: true
+      timeout: "10m"
+      exit-code: "1"
