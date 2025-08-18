@@ -78,7 +78,7 @@ runs:
     shell: bash
     id: image
     env:
-      KO_DOCKER_REPO: ghcr.io/${{ github.repository_owner }}/${{ inputs.image-uri }}
+      KO_DOCKER_REPO: ${{ inputs.image-uri }}
     run: |
       set -euo pipefail
       ko build ${{ inputs.main-path }} \
