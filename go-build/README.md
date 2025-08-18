@@ -10,7 +10,7 @@ Minimal usage (see input section below for more options).
     - uses: mchmarny/common/go-build@main
       id: build  # Used when referencing the action outputs
       with:
-        image-uri: github.com/${{ env.GITHUB_REPOSITORY }}
+        image-uri: github.com/$GITHUB_REPOSITORY
         release-version: ${{ github.ref_name }}
         registry-username: ${{ github.actor }}
         registry-password: ${{ secrets.GITHUB_TOKEN }}
