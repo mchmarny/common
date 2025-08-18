@@ -1,5 +1,5 @@
 name: go-build
-description: Build a Go application into a container image using ko
+description: Build a Go application into a container image using ko.
 
 inputs:
   image-uri:
