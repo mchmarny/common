@@ -80,11 +80,15 @@ runs:
   - name: Install crane
     uses: imjasonh/setup-crane@31b88efe9de28ae0ffa220711af4b60be9435f6e  # v0.4
 
+  - name: Install cosign
+    uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62  # v3.10.0
+
   - name: Authenticate
     shell: bash
     run: |
       echo ${{ inputs.registry-password }} | ko login ghcr.io -u ${{ inputs.registry-username }} --password-stdin
       echo ${{ inputs.registry-password }} | crane auth login ghcr.io -u ${{ inputs.registry-username }} --password-stdin
+      echo ${{ inputs.registry-password }} | cosign login ghcr.io -u ${{ inputs.registry-username }} --password-stdin
 
   - name: Build Image
     shell: bash
@@ -113,3 +117,17 @@ runs:
       subject-name: ${{ steps.image.outputs.name }}
       subject-digest: ${{ steps.image.outputs.digest }}
       push-to-registry: true
+
+  - name: Publish
+    shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.registry-password }}
+      IMAGE: "oci://${{ steps.image.outputs.name }}@${{ steps.image.outputs.digest }}"
+      BUNDLE: "${{ steps.image.outputs.digest }}.jsonl"
+      COSIGN_EXPERIMENTAL: "1"
+      ATTEST_TYPE: "https://slsa.dev/provenance/v1"
+      PREDICATE: "predicate.json"
+    run: |
+      gh attestation download "oci://$IMAGE" -R ${{ github.repository }}
+      jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicate' $BUNDLE > $PREDICATE  
+      cosign attest --type $ATTEST_TYPE --predicate $PREDICATE $IMAGE
