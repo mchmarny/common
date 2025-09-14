@@ -77,10 +77,14 @@ runs:
   - name: Install ko
     uses: ko-build/setup-ko@d006021bd0c28d1ce33a07e7943d48b079944c8d  # v0.9
 
-  - name: Authenticate ko
+  - name: Install crane
+    uses: imjasonh/setup-crane@31b88efe9de28ae0ffa220711af4b60be9435f6e  # v0.4
+
+  - name: Authenticate
     shell: bash
     run: |
-      ko login ghcr.io -u ${{ inputs.registry-username }} -p ${{ inputs.registry-password }}
+      echo ${{ inputs.registry-password }} | ko login ghcr.io -u ${{ inputs.registry-username }} --password-stdin
+      echo ${{ inputs.registry-password }} | crane auth login ghcr.io -u ${{ inputs.registry-username }} --password-stdin
 
   - name: Build Image
     shell: bash
@@ -96,15 +100,15 @@ runs:
         --bare \
         --tags latest \
         --tags ${{ inputs.release-version }}
-      echo "Image Refs: $(cat .refs)"
-      echo "uri=$(cat .refs)" >> "$GITHUB_OUTPUT"
-      echo "digest=$(cat .refs | sed 's/.*@//')" >> "$GITHUB_OUTPUT"
-      echo "name=$(cat .refs | sed 's/[:@].*//')" >> "$GITHUB_OUTPUT"
+      DIGEST="$(crane digest ${{ inputs.image-uri }}:${{ inputs.release-version }})"
+      echo "uri=${{ inputs.main-path }}:${{ inputs.release-version }}@$DIGEST" >> "$GITHUB_OUTPUT"
+      echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+      echo "name=${{ inputs.image-uri }}" >> "$GITHUB_OUTPUT"
 
   - name: Attest
     uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
     id: attest
     with:
-      subject-name: ${{ inputs.image-uri }}
+      subject-name: ${{ steps.image.outputs.name }}
       subject-digest: ${{ steps.image.outputs.digest }}
       push-to-registry: true
