@@ -16,6 +16,14 @@ inputs:
     description: 'Build entry path relative to the root of the repo. Default to main.go.'
     required: false
     default: 'main.go'
+  platforms:
+    description: 'Comma-separated list of target platforms for the build. Defaults to "linux/amd64,linux/arm64".'
+    required: false
+    default: 'linux/amd64,linux/arm64'
+  image-base:
+    description: 'Base image to use for the build. Defaults to "cgr.dev/chainguard/static:latest".'
+    required: false
+    default: 'cgr.dev/chainguard/static:latest'
   registry-username:
     description: '(optional) Registry username. Defaults to the GitHub actor.'
     required: false
@@ -79,9 +87,11 @@ runs:
     id: image
     env:
       KO_DOCKER_REPO: ${{ inputs.image-uri }}
+      KO_DEFAULTBASEIMAGE: ${{ inputs.image-base }}
     run: |
       set -euo pipefail
       ko build ${{ inputs.main-path }} \
+        --platform ${{ inputs.platforms }} \
         --image-refs .refs \
         --bare \
         --tags latest \

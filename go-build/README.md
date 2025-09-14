@@ -33,6 +33,14 @@ Minimal usage (see input section below for more options).
     description: 'Build entry path relative to the root of the repo. Default to main.go.'
     required: false
     default: 'main.go'
+  platforms:
+    description: 'Comma-separated list of target platforms for the build. Defaults to "linux/amd64,linux/arm64".'
+    required: false
+    default: 'linux/amd64,linux/arm64'
+  image-base:
+    description: 'Base image to use for the build. Defaults to "cgr.dev/chainguard/static:latest".'
+    required: false
+    default: 'cgr.dev/chainguard/static:latest'
   registry-username:
     description: '(optional) Registry username. Defaults to the GitHub actor.'
     required: false
@@ -47,14 +55,10 @@ Minimal usage (see input section below for more options).
 ```yaml
   image-uri:
     description: 'Fully qualified image URI after build (includes digest)'
-    value: ${{ steps.image.outputs.uri }}
   image-digest:
     description: 'Image digest after build'
-    value: ${{ steps.image.outputs.digest }}
   image-name:
     description: 'Image name (no digest or tag)'
-    value: ${{ steps.image.outputs.name }}
   image-tag:
     description: 'Image tag used for the build (e.g. v1.0.0)'
-    value: ${{ inputs.release-version }}
 ```
