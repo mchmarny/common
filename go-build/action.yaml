@@ -122,12 +122,19 @@ runs:
     shell: bash
     env:
       GH_TOKEN: ${{ inputs.registry-password }}
-      IMAGE: "oci://${{ steps.image.outputs.name }}@${{ steps.image.outputs.digest }}"
+      IMAGE: "${{ steps.image.outputs.name }}@${{ steps.image.outputs.digest }}"
       BUNDLE: "${{ steps.image.outputs.digest }}.jsonl"
       COSIGN_EXPERIMENTAL: "1"
       ATTEST_TYPE: "https://slsa.dev/provenance/v1"
       PREDICATE: "predicate.json"
     run: |
-      gh attestation download "oci://$IMAGE" -R ${{ github.repository }}
+      set -euo pipefail
+
+      # Download GitHub-hosted bundle
+      gh attestation download "oci://$IMAGE" -R ${{ github.repository }} --predicate-type $ATTEST_TYPE
+
+      # Extract SLSA v1 DSSE payload
       jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicate' $BUNDLE > $PREDICATE  
+
+      # Publish attestation to registry
       cosign attest --type $ATTEST_TYPE --predicate $PREDICATE $IMAGE
