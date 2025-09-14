@@ -131,7 +131,7 @@ runs:
       set -euo pipefail
 
       # Download GitHub-hosted bundle
-      gh attestation download "oci://$IMAGE" -R ${{ github.repository }} --predicate-type $ATTEST_TYPE
+      gh attestation download "oci://$IMAGE" -R ${{ github.repository }} --predicate-type $ATTEST_TYPE --limit 1
 
       # Extract SLSA v1 DSSE payload
       jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicate' $BUNDLE > $PREDICATE
