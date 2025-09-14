@@ -137,4 +137,4 @@ runs:
       jq -r '.dsseEnvelope.payload | @base64d | fromjson | .predicate' $BUNDLE > $PREDICATE  
 
       # Publish attestation to registry
-      cosign attest --type $ATTEST_TYPE --predicate $PREDICATE $IMAGE
+      cosign attest -y --type $ATTEST_TYPE --predicate $PREDICATE $IMAGE
