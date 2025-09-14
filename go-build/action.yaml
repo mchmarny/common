@@ -100,8 +100,9 @@ runs:
         --bare \
         --tags latest \
         --tags ${{ inputs.release-version }}
+      cat .refs
       DIGEST="$(crane digest ${{ inputs.image-uri }}:${{ inputs.release-version }})"
-      echo "uri=${{ inputs.main-path }}:${{ inputs.release-version }}@$DIGEST" >> "$GITHUB_OUTPUT"
+      echo "uri=${{ inputs.image-uri }}:${{ inputs.release-version }}@$DIGEST" >> "$GITHUB_OUTPUT"
       echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
       echo "name=${{ inputs.image-uri }}" >> "$GITHUB_OUTPUT"
 
