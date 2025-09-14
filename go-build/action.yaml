@@ -82,13 +82,14 @@ runs:
     run: |
       set -euo pipefail
       ko build ${{ inputs.main-path }} \
-        --image-refs .uri \
+        --image-refs .refs \
         --bare \
         --tags latest \
         --tags ${{ inputs.release-version }}
-      echo "uri=$(cat .uri)" >> "$GITHUB_OUTPUT"
-      echo "digest=$(cat .uri | sed 's/.*@//')" >> "$GITHUB_OUTPUT"
-      echo "name=$(cat .uri | sed 's/[:@].*//')" >> "$GITHUB_OUTPUT"
+      echo "Image Refs: $(cat .refs)"
+      echo "uri=$(cat .refs)" >> "$GITHUB_OUTPUT"
+      echo "digest=$(cat .refs | sed 's/.*@//')" >> "$GITHUB_OUTPUT"
+      echo "name=$(cat .refs | sed 's/[:@].*//')" >> "$GITHUB_OUTPUT"
 
   - name: Attest
     uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
